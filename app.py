@@ -90,68 +90,6 @@ body {
     100% { background-position: 0% 50%; }
 }
 
-.music-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1001;
-    background: rgba(255,255,255,0.95);
-    padding: 15px;
-    border-radius: 20px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-    border: 3px solid #FFD700;
-    width: 280px;
-    backdrop-filter: blur(10px);
-}
-
-.music-title {
-    font-size: 16px;
-    font-weight: bold;
-    color: #FF6B6B;
-    margin-bottom: 8px;
-    text-align: center;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-}
-
-.play-button {
-    background: linear-gradient(45deg, #FF6B6B, #FFD93D, #6BCF7F, #4D96FF);
-    background-size: 300% 300%;
-    animation: gradientFlow 3s ease infinite;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 25px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    width: 100%;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-}
-
-@keyframes gradientFlow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-.play-button:hover {
-    transform: scale(1.08);
-    box-shadow: 0 6px 20px rgba(255,107,107,0.6);
-}
-
-.volume-control {
-    width: 100%;
-    margin: 10px 0;
-}
-
-.music-info {
-    font-size: 12px;
-    color: #666;
-    text-align: center;
-    margin-top: 5px;
-}
-
 /* 标题样式 */
 .title-container {
     text-align: center;
@@ -175,33 +113,65 @@ body {
     text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
 }
 
+@keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 .subtitle {
     font-size: 1.2em;
     color: white;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     margin-top: 10px;
 }
-
-/* 主按钮样式 */
-.main-button {
-    background: linear-gradient(45deg, #FF6B6B, #FFD93D);
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 30px;
-    font-size: 1.2em;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 6px 20px rgba(255,107,107,0.4);
-}
-
-.main-button:hover {
-    transform: scale(1.1);
-    box-shadow: 0 8px 25px rgba(255,107,107,0.6);
-}
 </style>
 """, unsafe_allow_html=True)
+
+# 自动播放音乐的HTML
+def auto_play_music():
+    """自动播放背景音乐"""
+    music_html = """
+    <audio id="bgMusic" autoplay loop style="display: none;">
+        <source src="blessing_music.mp3" type="audio/mp3">
+        你的浏览器不支持音频播放
+    </audio>
+    <script>
+    // 自动播放音乐
+    function playMusic() {
+        var audio = document.getElementById('bgMusic');
+        if (audio) {
+            // 设置音量
+            audio.volume = 0.5;
+            
+            // 尝试播放
+            var playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(function() {
+                    console.log('音乐开始播放');
+                }).catch(function(error) {
+                    console.log('自动播放被阻止，等待用户交互');
+                    // 如果自动播放被阻止，在用户点击时重试
+                    document.addEventListener('click', function() {
+                        audio.play().catch(function(e) {
+                            console.log('播放失败:', e);
+                        });
+                    }, { once: true });
+                });
+            }
+        }
+    }
+    
+    // 页面加载后尝试播放
+    window.addEventListener('load', playMusic);
+    
+    // 延迟重试（解决某些浏览器的限制）
+    setTimeout(playMusic, 1000);
+    setTimeout(playMusic, 3000);
+    </script>
+    """
+    st.markdown(music_html, unsafe_allow_html=True)
 
 # 更鲜艳的祝福语和颜色
 wordslist = [
@@ -224,79 +194,6 @@ colors = [
     '#F44336', '#FFEB3B', '#4CAF50', '#03A9F4', '#9C27B0'
 ]
 
-def add_custom_music():
-    """添加自定义音乐播放器"""
-    music_file = "blessing_music.mp3"
-    
-    music_html = f'''
-    <div class="music-container">
-        <div class="music-title">🎵 专属祝福音乐</div>
-        <audio id="bgMusic" loop style="display: none;">
-            <source src="{music_file}" type="audio/mp3">
-            你的浏览器不支持音频播放
-        </audio>
-        
-        <button class="play-button" onclick="playMusic()">🎶 播放音乐</button>
-        <div class="music-info">点击播放专属祝福音乐</div>
-        
-        <div style="display: none;" id="musicControls">
-            <div class="volume-control">
-                <label style="color: #666; font-size: 12px;">音量:</label>
-                <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5" onchange="changeVolume(this.value)">
-            </div>
-            <button class="play-button" onclick="stopMusic()" style="background: linear-gradient(45deg, #FF6B6B, #FF6B6B); margin-top: 5px;">
-                ⏹️ 停止音乐
-            </button>
-        </div>
-    </div>
-    
-    <script>
-    let isPlaying = false;
-    
-    function playMusic() {{
-        const audio = document.getElementById('bgMusic');
-        const button = event.target;
-        const controls = document.getElementById('musicControls');
-        
-        audio.play().then(function() {{
-            isPlaying = true;
-            button.style.display = 'none';
-            controls.style.display = 'block';
-            document.querySelector('.music-info').textContent = '音乐播放中...';
-        }}).catch(function(error) {{
-            console.log('播放失败:', error);
-            document.querySelector('.music-info').textContent = '播放失败，请点击重试';
-        }});
-    }}
-    
-    function stopMusic() {{
-        const audio = document.getElementById('bgMusic');
-        audio.pause();
-        audio.currentTime = 0;
-        isPlaying = false;
-        
-        document.getElementById('musicControls').style.display = 'none';
-        document.querySelector('.play-button').style.display = 'block';
-        document.querySelector('.music-info').textContent = '点击播放专属祝福音乐';
-    }}
-    
-    function changeVolume(volume) {{
-        const audio = document.getElementById('bgMusic');
-        audio.volume = volume;
-    }}
-    
-    document.addEventListener('click', function() {{
-        const audio = document.getElementById('bgMusic');
-        if (!isPlaying) {{
-            audio.play().catch(function(error) {{
-                // 忽略自动播放错误
-            }});
-        }}
-    }});
-    </script>
-    '''
-    st.markdown(music_html, unsafe_allow_html=True)
-
 def show_blessings_one_by_one():
     """一个个显示祝福"""
     placeholder = st.empty()
@@ -312,9 +209,6 @@ def show_blessings_one_by_one():
     status_text = st.empty()
     blessings_container = st.empty()
     
-    # 添加自定义音乐
-    add_custom_music()
-    
     for i in range(total_blessings):
         progress = (i + 1) / total_blessings
         progress_bar.progress(progress)
@@ -324,10 +218,10 @@ def show_blessings_one_by_one():
         color = random.choice(colors)
         left = random.randint(1, 95)
         top = random.randint(3, 90)
-        font_size = random.randint(18, 26)  # 稍微加大字体
+        font_size = random.randint(18, 26)
         padding_h = random.randint(12, 20)
         padding_v = random.randint(10, 16)
-        rotation = random.randint(-8, 8)    # 增加旋转幅度
+        rotation = random.randint(-8, 8)
         animation_delay = random.uniform(0, 0.3)
         
         new_blessing = f'''
@@ -358,6 +252,9 @@ def show_blessings_one_by_one():
             st.rerun()
 
 def main():
+    # 自动播放背景音乐
+    auto_play_music()
+    
     # 使用新的标题样式
     st.markdown("""
     <div class="title-container">
