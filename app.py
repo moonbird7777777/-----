@@ -1,179 +1,325 @@
 import streamlit as st
 import random
 import time
-import pygame
-import threading
-import os
-from io import BytesIO
-import requests
-
-# 初始化pygame mixer
-try:
-    pygame.mixer.init()
-    music_available = True
-except:
-    music_available = False
 
 # 设置页面配置
 st.set_page_config(
-    page_title="moonbird的祝福",
+    page_title="moonbird的炫酷祝福",
     page_icon="🎉",
     layout="centered"
 )
 
-# 自定义CSS样式
+# 极致炫酷的CSS样式
 st.markdown("""
 <style>
 .blessing {
     position: fixed;
-    padding: 12px 20px;
-    border-radius: 15px;
+    padding: 15px 25px;
+    border-radius: 20px;
     font-family: 'SimHei', 'Microsoft YaHei', sans-serif;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
     z-index: 1000;
-    box-shadow: 0 6px 25px rgba(0,0,0,0.3);
-    border: 3px solid rgba(255,255,255,0.9);
-    min-width: 100px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    border: 4px solid rgba(255,255,255,0.8);
+    min-width: 120px;
     text-align: center;
-    animation: bounceIn 0.8s ease-out;
+    animation: superBounce 1s ease-out;
+    backdrop-filter: blur(10px);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
-@keyframes bounceIn {
+@keyframes superBounce {
     0% { 
         opacity: 0; 
-        transform: translateY(-50px) scale(0.3) rotate(-15deg);
+        transform: translateY(-100px) scale(0.2) rotate(-30deg);
+        filter: blur(20px);
+    }
+    30% { 
+        opacity: 0.8; 
+        transform: translateY(30px) scale(1.3) rotate(15deg);
+        filter: blur(5px);
     }
     50% { 
-        opacity: 0.9; 
-        transform: translateY(15px) scale(1.2) rotate(8deg);
+        transform: translateY(-20px) scale(1.1) rotate(-10deg);
     }
     70% { 
-        transform: translateY(-8px) scale(0.95) rotate(-3deg);
+        transform: translateY(10px) scale(1.05) rotate(5deg);
     }
     100% { 
         opacity: 1; 
         transform: translateY(0) scale(1) rotate(0);
+        filter: blur(0);
     }
 }
 
 .blessing:hover {
-    animation: heartbeat 0.5s ease-in-out;
-    transform: scale(1.05);
+    animation: megaGlow 0.6s ease-in-out infinite alternate, float 3s ease-in-out infinite;
+    transform: scale(1.2) rotate(5deg);
+    z-index: 1001;
 }
 
-@keyframes heartbeat {
-    0% { transform: scale(1.05); }
-    25% { transform: scale(1.15); }
-    50% { transform: scale(1.05); }
-    75% { transform: scale(1.1); }
-    100% { transform: scale(1.05); }
+@keyframes megaGlow {
+    0% { 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5), 
+                   0 0 20px currentColor,
+                   0 0 40px currentColor;
+        transform: scale(1.15);
+    }
+    100% { 
+        box-shadow: 0 15px 50px rgba(0,0,0,0.6), 
+                   0 0 30px currentColor,
+                   0 0 60px currentColor,
+                   0 0 80px rgba(255,255,255,0.5);
+        transform: scale(1.25);
+    }
 }
 
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(5deg); }
+    50% { transform: translateY(-10px) rotate(-5deg); }
+}
+
+/* 粒子效果 */
+.particle {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 999;
+    animation: particleFloat 3s ease-in-out infinite;
+}
+
+@keyframes particleFloat {
+    0% { 
+        opacity: 0;
+        transform: translateY(0) rotate(0deg) scale(0);
+    }
+    10% { 
+        opacity: 1;
+        transform: translateY(-20px) rotate(180deg) scale(1);
+    }
+    90% { 
+        opacity: 0.8;
+        transform: translateY(-100px) rotate(720deg) scale(1.2);
+    }
+    100% { 
+        opacity: 0;
+        transform: translateY(-150px) rotate(900deg) scale(0);
+    }
+}
+
+/* 超炫背景 */
+body {
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(255,107,107,0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255,217,61,0.3) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(107,207,127,0.3) 0%, transparent 50%),
+        radial-gradient(circle at 60% 60%, rgba(77,150,255,0.3) 0%, transparent 50%),
+        linear-gradient(135deg, #FF6B6B 0%, #FFD93D 25%, #6BCF7F 50%, #4D96FF 75%, #9D4BFF 100%);
+    background-size: 400% 400%;
+    animation: cosmicShift 20s ease infinite;
+    min-height: 100vh;
+}
+
+@keyframes cosmicShift {
+    0% { 
+        background-position: 0% 50%;
+        filter: hue-rotate(0deg);
+    }
+    25% { 
+        background-position: 100% 50%;
+        filter: hue-rotate(90deg);
+    }
+    50% { 
+        background-position: 50% 100%;
+        filter: hue-rotate(180deg);
+    }
+    75% { 
+        background-position: 0% 50%;
+        filter: hue-rotate(270deg);
+    }
+    100% { 
+        background-position: 50% 0%;
+        filter: hue-rotate(360deg);
+    }
+}
+
+/* 标题特效 */
+.title-container {
+    text-align: center;
+    padding: 30px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 30px;
+    backdrop-filter: blur(20px);
+    margin-bottom: 30px;
+    border: 3px solid rgba(255,255,255,0.4);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    animation: titleGlow 4s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+    0% { 
+        box-shadow: 0 15px 35px rgba(0,0,0,0.3),
+                   0 0 30px rgba(255,107,107,0.5);
+        transform: scale(1);
+    }
+    100% { 
+        box-shadow: 0 20px 45px rgba(0,0,0,0.4),
+                   0 0 50px rgba(255,217,61,0.6),
+                   0 0 70px rgba(107,207,127,0.4);
+        transform: scale(1.02);
+    }
+}
+
+.title-text {
+    font-size: 4em;
+    font-weight: bold;
+    background: linear-gradient(45deg, #FF6B6B, #FFD93D, #6BCF7F, #4D96FF, #9D4BFF, #FF6B6B);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: rainbowFlow 6s ease infinite, textShake 3s ease-in-out infinite;
+    text-shadow: 3px 3px 8px rgba(0,0,0,0.2);
+}
+
+@keyframes rainbowFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes textShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
+}
+
+.subtitle {
+    font-size: 1.5em;
+    color: white;
+    margin-top: 15px;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+    animation: subtitlePulse 2s ease-in-out infinite;
+}
+
+@keyframes subtitlePulse {
+    0%, 100% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+}
+
+/* 超级按钮 */
+.super-button {
+    background: linear-gradient(45deg, #FF6B6B, #FFD93D, #6BCF7F, #4D96FF);
+    background-size: 400% 400%;
+    animation: buttonFlow 3s ease infinite, buttonPulse 2s ease-in-out infinite;
+    color: white;
+    border: none;
+    padding: 25px 50px;
+    border-radius: 35px;
+    font-size: 1.8em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.4);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.super-button::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+    transform: rotate(45deg);
+    animation: buttonShine 3s ease-in-out infinite;
+}
+
+@keyframes buttonShine {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+@keyframes buttonFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes buttonPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 12px 35px rgba(0,0,0,0.4); }
+    50% { transform: scale(1.08); box-shadow: 0 15px 45px rgba(0,0,0,0.6), 0 0 30px rgba(255,255,255,0.3); }
+}
+
+.super-button:hover {
+    animation: buttonFlow 1s ease infinite, buttonPulse 0.5s ease-in-out infinite;
+    transform: scale(1.1);
+}
+
+/* 进度条美化 */
+.stProgress > div > div > div > div {
+    background: linear-gradient(90deg, #FF6B6B, #FFD93D, #6BCF7F, #4D96FF, #9D4BFF);
+    background-size: 300% 300%;
+    animation: gradientFlow 2s ease infinite;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(255,255,255,0.5);
+}
+
+/* 隐藏Streamlit元素 */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
 
 .main .block-container {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-}
-
-body {
-    background: linear-gradient(135deg, #FF6B6B 0%, #FFD93D 25%, #6BCF7F 50%, #4D96FF 75%, #9D4BFF 100%);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
-}
-
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-.title-container {
-    text-align: center;
-    padding: 20px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    margin-bottom: 20px;
-    border: 2px solid rgba(255,255,255,0.3);
-}
-
-.title-text {
-    font-size: 3em;
-    font-weight: bold;
-    background: linear-gradient(45deg, #FF6B6B, #FFD93D, #6BCF7F, #4D96FF, #9D4BFF);
-    background-size: 300% 300%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: gradientFlow 4s ease infinite;
-}
-
-@keyframes gradientFlow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-.subtitle {
-    font-size: 1.2em;
-    color: white;
-    margin-top: 10px;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# 祝福语和颜色
+# 扩展的祝福语和颜色
 wordslist = [
     '早睡💤', '工作顺利📚', '要开心呀！😊', '天天快乐🎈', '心想事成✨',
     '身体健康💪', '万事如意🌟', '笑口常开😄', '平安喜乐🕊️', '好运连连🍀',
-    '梦想成真🌈', '前程似锦🎓', '友谊长存👫', '幸福美满❤️', '活力满满⚡'
+    '梦想成真🌈', '前程似锦🎓', '友谊长存👫', '幸福美满❤️', '活力满满⚡',
+    '聪明伶俐🎯', '勇敢坚强🛡️', '温柔善良🌸', '自信美丽🌟', '无忧无虑🎵',
+    '收获满满📦', '灵感不断💡', '光芒四射☀️', '温暖如春🌺', '财源滚滚💰',
+    '事业腾飞🚀', '爱情甜蜜💑', '家庭和睦🏠', '青春永驻🌹', '能量爆棚⚡',
+    '幸运爆棚🎯', '快乐加倍😆', '好运爆棚🎊', '奇迹发生🌟', '心想事成🎁'
 ]
 
 colors = [
     '#FF6B6B', '#FFD93D', '#6BCF7F', '#4D96FF', '#9D4BFF',
-    '#FF8E8E', '#FFE066', '#8CE08C', '#6BA8FF', '#B366FF'
+    '#FF8E8E', '#FFE066', '#8CE08C', '#6BA8FF', '#B366FF',
+    '#FF5252', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0',
+    '#FF4081', '#FF9800', '#00E676', '#00B0FF', '#E040FB',
+    '#FF1744', '#FFC107', '#00C853', '#0091EA', '#D500F9'
 ]
 
-def play_music_in_thread():
-    """在后台线程中播放音乐"""
-    def music_player():
-        try:
-            # 方法1: 使用pygame播放（如果可用）
-            if music_available:
-                # 创建一个简单的提示音
-                pygame.mixer.music.set_volume(0.3)
-                
-                # 播放简单的音调
-                for i in range(100):  # 播放100次
-                    # 创建简单的音效
-                    pygame.mixer.Sound.play(pygame.mixer.Sound(buffer=bytes([0] * 44)))
-                    time.sleep(2)  # 每2秒播放一次
-                    
-        except Exception as e:
-            print(f"音乐播放错误: {e}")
-    
-    # 在后台线程中播放音乐
-    music_thread = threading.Thread(target=music_player, daemon=True)
-    music_thread.start()
-
-def play_simple_beep():
-    """播放简单的提示音"""
-    try:
-        # 在本地环境中，我们可以使用系统声音
-        import sys
-        if sys.platform == "win32":
-            import winsound
-            winsound.Beep(1000, 200)  # 频率1000Hz，持续时间200ms
-        elif sys.platform == "darwin":  # macOS
-            os.system('afplay /System/Library/Sounds/Ping.aiff &')
-        else:  # Linux
-            os.system('play -q -n synth 0.2 sine 1000 &')
-    except:
-        pass  # 如果无法播放，静默失败
+def create_particles():
+    """创建粒子效果"""
+    particles_html = ""
+    for i in range(20):  # 创建20个粒子
+        color = random.choice(colors)
+        left = random.randint(0, 100)
+        delay = random.uniform(0, 5)
+        duration = random.uniform(2, 4)
+        
+        particles_html += f'''
+        <div class="particle" style="
+            left: {left}vw;
+            background-color: {color};
+            animation-delay: {delay}s;
+            animation-duration: {duration}s;
+        "></div>
+        '''
+    return particles_html
 
 def show_blessings_one_by_one():
     """一个个显示祝福"""
@@ -184,25 +330,26 @@ def show_blessings_one_by_one():
     if 'blessings_shown' not in st.session_state:
         st.session_state.blessings_shown = []
     
-    total_blessings = 30  # 减少数量
+    total_blessings = 50
     
     progress_bar = st.progress(0)
     status_text = st.empty()
     blessings_container = st.empty()
     
-    # 开始播放音乐
-    play_music_in_thread()
+    # 添加粒子效果
+    particles_html = create_particles()
+    st.markdown(particles_html, unsafe_allow_html=True)
     
     for i in range(total_blessings):
         progress = (i + 1) / total_blessings
         progress_bar.progress(progress)
-        status_text.text(f'✨ 发送祝福 {i+1}/{total_blessings}')
+        status_text.text(f'✨ 超炫祝福发送中... {i+1}/{total_blessings}')
         
         text = random.choice(wordslist)
         color = random.choice(colors)
         left = random.randint(1, 95)
         top = random.randint(3, 90)
-        font_size = random.randint(18, 24)
+        font_size = random.randint(20, 28)
         
         new_blessing = f'''
         <div class="blessing" style="
@@ -215,40 +362,44 @@ def show_blessings_one_by_one():
         '''
         st.session_state.blessings_shown.append(new_blessing)
         blessings_container.markdown(''.join(st.session_state.blessings_shown), unsafe_allow_html=True)
-        
-        # 每5个祝福播放一次提示音
-        if i % 5 == 0:
-            play_simple_beep()
-            
-        time.sleep(0.15)
+        time.sleep(0.1)
     
-    status_text.success('🎊 祝福发送完成！')
+    status_text.success('🎊 超炫祝福发送完成！视觉效果爆炸！')
     
-    if st.button('🔄 再来一次'):
-        for key in ['blessing_count', 'blessings_shown']:
-            if key in st.session_state:
-                del st.session_state[key]
-        st.rerun()
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button('🚀 再来一次超炫体验！', type='primary', use_container_width=True):
+            for key in ['blessing_count', 'blessings_shown']:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.rerun()
 
 def main():
-    # 标题
+    # 超炫标题
     st.markdown("""
     <div class="title-container">
-        <div class="title-text">moonbird的祝福</div>
-        <div class="subtitle">带音效的祝福程序 🎵</div>
+        <div class="title-text">moonbird的炫酷祝福</div>
+        <div class="subtitle">视觉盛宴 • 极致体验 • 祝福满屏</div>
     </div>
     """, unsafe_allow_html=True)
     
-    # 音乐状态显示
-    if music_available:
-        st.success("🎵 音乐系统已就绪")
-    else:
-        st.warning("🔇 音乐功能在当前环境不可用，但祝福效果正常")
+    # 特效说明
+    st.info("""
+    🌟 **特效说明**：
+    - 💫 悬浮粒子背景
+    - 🌈 彩虹渐变流动
+    - ✨ 3D弹跳动画
+    - 🔥 发光悬浮效果
+    - 🎭 色彩变幻魔法
+    """)
     
     if 'blessing_count' not in st.session_state or st.session_state.blessing_count == 0:
-        if st.button('🎁 开始祝福', type='primary', use_container_width=True):
-            st.session_state.blessing_count = 1
-            st.rerun()
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns([1, 3, 1])
+        with col2:
+            if st.button('🎆 开启视觉盛宴！', type='primary', use_container_width=True):
+                st.session_state.blessing_count = 1
+                st.rerun()
     
     if 'blessing_count' in st.session_state and st.session_state.blessing_count > 0:
         show_blessings_one_by_one()
