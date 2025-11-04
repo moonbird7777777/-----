@@ -1,7 +1,18 @@
 import streamlit as st
 import random
 import time
-import base64
+import pygame
+import threading
+import os
+from io import BytesIO
+import requests
+
+# 初始化pygame mixer
+try:
+    pygame.mixer.init()
+    music_available = True
+except:
+    music_available = False
 
 # 设置页面配置
 st.set_page_config(
@@ -112,18 +123,6 @@ body {
     color: white;
     margin-top: 10px;
 }
-
-/* 隐藏音频但确保播放 */
-.audio-player {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100px;
-    height: 50px;
-    opacity: 0.01;
-    z-index: 9999;
-    pointer-events: none;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -139,79 +138,42 @@ colors = [
     '#FF8E8E', '#FFE066', '#8CE08C', '#6BA8FF', '#B366FF'
 ]
 
-def play_background_music():
-    """播放背景音乐 - 使用base64编码的音频数据"""
-    # 这是一个简短的欢快音乐片段（base64编码）
-    audio_base64 = """
-    UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBh
-    AAAAk7G2l2U8AACPtLqXaDgAAI2yuZdmOAAAjLC5l2Y3AACLr7qXZjcAAIquu5dmNwAAia27l2Y3
-    AACIq7uXZjcAAIequpdmNwAAhqi6l2Y3AACFp7mXZjcAAISmuJdmNwAAg6W3l2Y3AACCpLaXZjcA
-    AIGjtZdmNwAAgKK0l2Y3AAB/oLOXZjcAAH6fsZdmNwAAfZ6vl2Y3AAB8nK2XZjcAAHuaq5dmNwAA
-    epipl2Y3AAB4l6iXZjcAAHaVppdmNwAAdJOk
-    """
+def play_music_in_thread():
+    """在后台线程中播放音乐"""
+    def music_player():
+        try:
+            # 方法1: 使用pygame播放（如果可用）
+            if music_available:
+                # 创建一个简单的提示音
+                pygame.mixer.music.set_volume(0.3)
+                
+                # 播放简单的音调
+                for i in range(100):  # 播放100次
+                    # 创建简单的音效
+                    pygame.mixer.Sound.play(pygame.mixer.Sound(buffer=bytes([0] * 44)))
+                    time.sleep(2)  # 每2秒播放一次
+                    
+        except Exception as e:
+            print(f"音乐播放错误: {e}")
     
-    # 创建音频播放器
-    audio_html = f"""
-    <div class="audio-player">
-        <audio id="bgMusic" autoplay loop>
-            <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
-        </audio>
-    </div>
-    <script>
-        // 确保音乐播放
-        function playMusic() {{
-            const audio = document.getElementById('bgMusic');
-            if (audio) {{
-                audio.volume = 0.3;
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {{
-                    playPromise.then(_ => {{
-                        console.log('音乐开始播放');
-                    }}).catch(error => {{
-                        console.log('自动播放被阻止');
-                        // 显示播放按钮
-                        showPlayButton();
-                    }});
-                }}
-            }}
-        }}
-        
-        function showPlayButton() {{
-            const btn = document.createElement('button');
-            btn.innerHTML = '🎵 点击播放音乐';
-            btn.style.cssText = `
-                position: fixed;
-                top: 10px;
-                right: 10px;
-                background: #FF6B6B;
-                color: white;
-                border: none;
-                padding: 10px 15px;
-                border-radius: 20px;
-                cursor: pointer;
-                z-index: 10000;
-                font-size: 14px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            `;
-            btn.onclick = function() {{
-                document.getElementById('bgMusic').play();
-                this.remove();
-            }};
-            document.body.appendChild(btn);
-        }}
-        
-        // 页面加载后尝试播放
-        window.addEventListener('load', function() {{
-            setTimeout(playMusic, 500);
-        }});
-        
-        // 用户交互时也尝试播放
-        document.addEventListener('click', function() {{
-            playMusic();
-        }});
-    </script>
-    """
-    st.markdown(audio_html, unsafe_allow_html=True)
+    # 在后台线程中播放音乐
+    music_thread = threading.Thread(target=music_player, daemon=True)
+    music_thread.start()
+
+def play_simple_beep():
+    """播放简单的提示音"""
+    try:
+        # 在本地环境中，我们可以使用系统声音
+        import sys
+        if sys.platform == "win32":
+            import winsound
+            winsound.Beep(1000, 200)  # 频率1000Hz，持续时间200ms
+        elif sys.platform == "darwin":  # macOS
+            os.system('afplay /System/Library/Sounds/Ping.aiff &')
+        else:  # Linux
+            os.system('play -q -n synth 0.2 sine 1000 &')
+    except:
+        pass  # 如果无法播放，静默失败
 
 def show_blessings_one_by_one():
     """一个个显示祝福"""
@@ -222,11 +184,14 @@ def show_blessings_one_by_one():
     if 'blessings_shown' not in st.session_state:
         st.session_state.blessings_shown = []
     
-    total_blessings = 50
+    total_blessings = 30  # 减少数量
     
     progress_bar = st.progress(0)
     status_text = st.empty()
     blessings_container = st.empty()
+    
+    # 开始播放音乐
+    play_music_in_thread()
     
     for i in range(total_blessings):
         progress = (i + 1) / total_blessings
@@ -250,7 +215,12 @@ def show_blessings_one_by_one():
         '''
         st.session_state.blessings_shown.append(new_blessing)
         blessings_container.markdown(''.join(st.session_state.blessings_shown), unsafe_allow_html=True)
-        time.sleep(0.1)
+        
+        # 每5个祝福播放一次提示音
+        if i % 5 == 0:
+            play_simple_beep()
+            
+        time.sleep(0.15)
     
     status_text.success('🎊 祝福发送完成！')
     
@@ -261,19 +231,19 @@ def show_blessings_one_by_one():
         st.rerun()
 
 def main():
-    # 立即开始播放音乐
-    play_background_music()
-    
     # 标题
     st.markdown("""
     <div class="title-container">
         <div class="title-text">moonbird的祝福</div>
-        <div class="subtitle">音乐自动播放中... 🎵</div>
+        <div class="subtitle">带音效的祝福程序 🎵</div>
     </div>
     """, unsafe_allow_html=True)
     
-    # 音乐状态提示
-    st.info("💡 如果音乐没有自动播放，请点击页面任意位置或刷新页面")
+    # 音乐状态显示
+    if music_available:
+        st.success("🎵 音乐系统已就绪")
+    else:
+        st.warning("🔇 音乐功能在当前环境不可用，但祝福效果正常")
     
     if 'blessing_count' not in st.session_state or st.session_state.blessing_count == 0:
         if st.button('🎁 开始祝福', type='primary', use_container_width=True):
