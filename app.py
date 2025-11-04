@@ -1,7 +1,6 @@
 import streamlit as st
 import random
 import time
-import base64
 
 # 设置页面配置
 st.set_page_config(
@@ -156,15 +155,26 @@ body {
     animation: gradientFlow 2s ease infinite;
 }
 
-/* 音效提示 */
-.sound-tip {
-    background: rgba(255,255,255,0.9);
-    padding: 10px 15px;
+/* 音乐播放器样式 */
+.music-player {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1001;
+    background: rgba(255,255,255,0.95);
+    padding: 15px;
     border-radius: 20px;
-    font-size: 14px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    border: 3px solid #FFD700;
+    width: 300px;
+}
+
+.music-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #FF6B6B;
+    margin-bottom: 10px;
     text-align: center;
-    margin: 10px 0;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -190,14 +200,21 @@ colors = [
     '#F44336', '#FFEB3B', '#4CAF50', '#03A9F4', '#9C27B0'
 ]
 
-def play_simple_sound():
-    """使用Streamlit的audio组件播放简单音效"""
-    # 创建一个简单的提示音（使用base64编码的短音频）
-    # 这里使用一个非常简短的beep声
-    audio_base64 = "SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAABAAACcQCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAABQTEFNRTMuMTAwBKkAAAAAAAAAADUgJAOHQQAB9AAACHDURWIvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//sQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV"
-    
-    # 隐藏的音频播放
-    st.audio(audio_base64, format="audio/wav", start_time=0, autoplay=True)
+def add_music_player():
+    """添加音乐播放器"""
+    music_html = """
+    <div class="music-player">
+        <div class="music-title">🎵 祝福背景音乐</div>
+        <audio controls autoplay loop style="width: 100%;">
+            <source src="blessing_music.mp3" type="audio/mp3">
+            您的浏览器不支持音频播放
+        </audio>
+        <div style="text-align: center; margin-top: 8px; font-size: 12px; color: #666;">
+            点击播放按钮开启音乐
+        </div>
+    </div>
+    """
+    st.markdown(music_html, unsafe_allow_html=True)
 
 def show_blessings_one_by_one():
     """一个个显示祝福"""
@@ -213,11 +230,6 @@ def show_blessings_one_by_one():
     progress_bar = st.progress(0)
     status_text = st.empty()
     blessings_container = st.empty()
-    
-    # 显示音效提示
-    with st.empty():
-        st.markdown('<div class="sound-tip">🎵 音效播放中...</div>', unsafe_allow_html=True)
-        time.sleep(2)
     
     for i in range(total_blessings):
         progress = (i + 1) / total_blessings
@@ -248,21 +260,7 @@ def show_blessings_one_by_one():
         '''
         st.session_state.blessings_shown.append(new_blessing)
         blessings_container.markdown(''.join(st.session_state.blessings_shown), unsafe_allow_html=True)
-        
-        # 每10个祝福尝试播放一次音效
-        if i % 10 == 0:
-            try:
-                play_simple_sound()
-            except:
-                pass  # 如果音效失败，静默继续
-        
         time.sleep(0.15)
-    
-    # 播放完成音效
-    try:
-        play_simple_sound()
-    except:
-        pass
     
     status_text.success('🎊 所有祝福发送完成！满屏都是对你的祝福！')
     
@@ -276,6 +274,9 @@ def show_blessings_one_by_one():
             st.rerun()
 
 def main():
+    # 添加音乐播放器
+    add_music_player()
+    
     # 使用新的标题样式
     st.markdown("""
     <div class="title-container">
@@ -284,12 +285,8 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
-    # 音效说明
-    st.markdown("""
-    <div class="sound-tip">
-        🎵 温馨提示：为确保最佳体验，请确保设备音量已开启
-    </div>
-    """, unsafe_allow_html=True)
+    # 音乐使用说明
+    st.info("🎵 **音乐提示**: 右下角有音乐播放器，请点击播放按钮开启背景音乐")
     
     if 'blessing_count' not in st.session_state or st.session_state.blessing_count == 0:
         st.markdown("<br><br>", unsafe_allow_html=True)
