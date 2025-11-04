@@ -125,53 +125,19 @@ body {
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     margin-top: 10px;
 }
+
+/* 隐藏的音乐播放器 */
+.hidden-audio {
+    position: fixed;
+    top: -100px;
+    left: -100px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
 </style>
 """, unsafe_allow_html=True)
-
-# 自动播放音乐的HTML
-def auto_play_music():
-    """自动播放背景音乐"""
-    music_html = """
-    <audio id="bgMusic" autoplay loop style="display: none;">
-        <source src="blessing_music.mp3" type="audio/mp3">
-        你的浏览器不支持音频播放
-    </audio>
-    <script>
-    // 自动播放音乐
-    function playMusic() {
-        var audio = document.getElementById('bgMusic');
-        if (audio) {
-            // 设置音量
-            audio.volume = 0.5;
-            
-            // 尝试播放
-            var playPromise = audio.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.then(function() {
-                    console.log('音乐开始播放');
-                }).catch(function(error) {
-                    console.log('自动播放被阻止，等待用户交互');
-                    // 如果自动播放被阻止，在用户点击时重试
-                    document.addEventListener('click', function() {
-                        audio.play().catch(function(e) {
-                            console.log('播放失败:', e);
-                        });
-                    }, { once: true });
-                });
-            }
-        }
-    }
-    
-    // 页面加载后尝试播放
-    window.addEventListener('load', playMusic);
-    
-    // 延迟重试（解决某些浏览器的限制）
-    setTimeout(playMusic, 1000);
-    setTimeout(playMusic, 3000);
-    </script>
-    """
-    st.markdown(music_html, unsafe_allow_html=True)
 
 # 更鲜艳的祝福语和颜色
 wordslist = [
@@ -252,9 +218,6 @@ def show_blessings_one_by_one():
             st.rerun()
 
 def main():
-    # 自动播放背景音乐
-    auto_play_music()
-    
     # 使用新的标题样式
     st.markdown("""
     <div class="title-container">
@@ -263,13 +226,34 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
-    if 'blessing_count' not in st.session_state or st.session_state.blessing_count == 0:
-        st.markdown("<br>", unsafe_allow_html=True)
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            if st.button('🎁 开启祝福礼包 ✨', type='primary', use_container_width=True):
-                st.session_state.blessing_count = 1
-                st.rerun()
+    # 在用户交互后添加音乐播放
+    if st.button('🎁 开启祝福礼包 ✨', type='primary', key='start_button'):
+        st.session_state.blessing_count = 1
+        
+        # 在用户点击后添加音乐（这样可以绕过自动播放限制）
+        music_html = """
+        <div class="hidden-audio">
+            <audio id="bgMusic" autoplay loop>
+                <source src="blessing_music.mp3" type="audio/mp3">
+            </audio>
+        </div>
+        <script>
+        // 用户点击后播放音乐
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                var audio = document.getElementById('bgMusic');
+                if (audio) {
+                    audio.volume = 0.5;
+                    audio.play().catch(function(e) {
+                        console.log('播放失败:', e);
+                    });
+                }
+            }, 500);
+        });
+        </script>
+        """
+        st.markdown(music_html, unsafe_allow_html=True)
+        st.rerun()
     
     if 'blessing_count' in st.session_state and st.session_state.blessing_count > 0:
         show_blessings_one_by_one()
