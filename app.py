@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 import time
+import base64
 
 # 设置页面配置
 st.set_page_config(
@@ -9,7 +10,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 自定义CSS样式 - 鲜艳活泼配色
+# 自定义CSS样式
 st.markdown("""
 <style>
 .blessing {
@@ -46,7 +47,7 @@ st.markdown("""
 }
 
 .blessing:hover {
-    animation: heartbeat 0.5s ease-in-out, glow 1s infinite alternate;
+    animation: heartbeat 0.5s ease-in-out;
     transform: scale(1.05);
 }
 
@@ -58,11 +59,6 @@ st.markdown("""
     100% { transform: scale(1.05); }
 }
 
-@keyframes glow {
-    from { box-shadow: 0 6px 25px rgba(0,0,0,0.3), 0 0 10px currentColor; }
-    to { box-shadow: 0 6px 25px rgba(0,0,0,0.3), 0 0 20px currentColor; }
-}
-
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
@@ -72,14 +68,8 @@ header {visibility: hidden;}
     padding-bottom: 1rem;
 }
 
-/* 鲜艳的渐变背景 */
 body {
-    background: linear-gradient(135deg, 
-        #FF6B6B 0%, 
-        #FFD93D 25%, 
-        #6BCF7F 50%, 
-        #4D96FF 75%, 
-        #9D4BFF 100%);
+    background: linear-gradient(135deg, #FF6B6B 0%, #FFD93D 25%, #6BCF7F 50%, #4D96FF 75%, #9D4BFF 100%);
     background-size: 400% 400%;
     animation: gradientShift 15s ease infinite;
 }
@@ -90,7 +80,6 @@ body {
     100% { background-position: 0% 50%; }
 }
 
-/* 标题样式 */
 .title-container {
     text-align: center;
     padding: 20px;
@@ -110,7 +99,6 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     animation: gradientFlow 4s ease infinite;
-    text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
 }
 
 @keyframes gradientFlow {
@@ -122,99 +110,108 @@ body {
 .subtitle {
     font-size: 1.2em;
     color: white;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     margin-top: 10px;
 }
 
-/* 开始按钮样式 */
-.start-button {
-    background: linear-gradient(45deg, #FF6B6B, #FFD93D, #6BCF7F, #4D96FF);
-    background-size: 300% 300%;
-    animation: gradientFlow 3s ease infinite;
-    color: white;
-    border: none;
-    padding: 20px 40px;
-    border-radius: 30px;
-    font-size: 1.5em;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-
-.start-button:hover {
-    transform: scale(1.1);
-    box-shadow: 0 12px 35px rgba(0,0,0,0.4);
-}
-
-/* 进度条样式 */
-.stProgress > div > div > div > div {
-    background: linear-gradient(90deg, #FF6B6B, #FFD93D, #6BCF7F, #4D96FF, #9D4BFF);
-    background-size: 300% 300%;
-    animation: gradientFlow 2s ease infinite;
-}
-
-/* 音乐播放器样式 */
-.music-player {
+/* 隐藏音频但确保播放 */
+.audio-player {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1001;
-    background: rgba(255,255,255,0.95);
-    padding: 15px;
-    border-radius: 20px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-    border: 3px solid #FFD700;
-    width: 300px;
-}
-
-.music-title {
-    font-size: 16px;
-    font-weight: bold;
-    color: #FF6B6B;
-    margin-bottom: 10px;
-    text-align: center;
+    top: 0;
+    left: 0;
+    width: 100px;
+    height: 50px;
+    opacity: 0.01;
+    z-index: 9999;
+    pointer-events: none;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# 更鲜艳的祝福语和颜色
+# 祝福语和颜色
 wordslist = [
     '早睡💤', '工作顺利📚', '要开心呀！😊', '天天快乐🎈', '心想事成✨',
     '身体健康💪', '万事如意🌟', '笑口常开😄', '平安喜乐🕊️', '好运连连🍀',
-    '梦想成真🌈', '前程似锦🎓', '友谊长存👫', '幸福美满❤️', '活力满满⚡',
-    '聪明伶俐🎯', '勇敢坚强🛡️', '温柔善良🌸', '自信美丽🌟', '无忧无虑🎵',
-    '收获满满📦', '灵感不断💡', '心想事成🎯', '光芒四射☀️', '温暖如春🌺',
-    '财源滚滚💰', '事业腾飞🚀', '爱情甜蜜💑', '家庭和睦🏠', '青春永驻🌹',
-    '能量爆棚⚡', '幸运爆棚🎯', '快乐加倍😆', '好运爆棚🎊', '奇迹发生🌟'
+    '梦想成真🌈', '前程似锦🎓', '友谊长存👫', '幸福美满❤️', '活力满满⚡'
 ]
 
-# 更鲜艳活泼的颜色
 colors = [
     '#FF6B6B', '#FFD93D', '#6BCF7F', '#4D96FF', '#9D4BFF',
-    '#FF8E8E', '#FFE066', '#8CE08C', '#6BA8FF', '#B366FF',
-    '#FF5252', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0',
-    '#FF4081', '#FF9800', '#00E676', '#00B0FF', '#E040FB',
-    '#FF1744', '#FFC107', '#00C853', '#0091EA', '#D500F9',
-    '#F44336', '#FFEB3B', '#4CAF50', '#03A9F4', '#9C27B0'
+    '#FF8E8E', '#FFE066', '#8CE08C', '#6BA8FF', '#B366FF'
 ]
 
-def add_music_player():
-    """添加音乐播放器"""
-    music_html = """
-    <div class="music-player">
-        <div class="music-title">🎵 祝福背景音乐</div>
-        <audio controls autoplay loop style="width: 100%;">
-            <source src="blessing_music.mp3" type="audio/mp3">
-            您的浏览器不支持音频播放
-        </audio>
-        <div style="text-align: center; margin-top: 8px; font-size: 12px; color: #666;">
-            点击播放按钮开启音乐
-        </div>
-    </div>
+def play_background_music():
+    """播放背景音乐 - 使用base64编码的音频数据"""
+    # 这是一个简短的欢快音乐片段（base64编码）
+    audio_base64 = """
+    UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBh
+    AAAAk7G2l2U8AACPtLqXaDgAAI2yuZdmOAAAjLC5l2Y3AACLr7qXZjcAAIquu5dmNwAAia27l2Y3
+    AACIq7uXZjcAAIequpdmNwAAhqi6l2Y3AACFp7mXZjcAAISmuJdmNwAAg6W3l2Y3AACCpLaXZjcA
+    AIGjtZdmNwAAgKK0l2Y3AAB/oLOXZjcAAH6fsZdmNwAAfZ6vl2Y3AAB8nK2XZjcAAHuaq5dmNwAA
+    epipl2Y3AAB4l6iXZjcAAHaVppdmNwAAdJOk
     """
-    st.markdown(music_html, unsafe_allow_html=True)
+    
+    # 创建音频播放器
+    audio_html = f"""
+    <div class="audio-player">
+        <audio id="bgMusic" autoplay loop>
+            <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
+        </audio>
+    </div>
+    <script>
+        // 确保音乐播放
+        function playMusic() {{
+            const audio = document.getElementById('bgMusic');
+            if (audio) {{
+                audio.volume = 0.3;
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {{
+                    playPromise.then(_ => {{
+                        console.log('音乐开始播放');
+                    }}).catch(error => {{
+                        console.log('自动播放被阻止');
+                        // 显示播放按钮
+                        showPlayButton();
+                    }});
+                }}
+            }}
+        }}
+        
+        function showPlayButton() {{
+            const btn = document.createElement('button');
+            btn.innerHTML = '🎵 点击播放音乐';
+            btn.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                background: #FF6B6B;
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 20px;
+                cursor: pointer;
+                z-index: 10000;
+                font-size: 14px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            `;
+            btn.onclick = function() {{
+                document.getElementById('bgMusic').play();
+                this.remove();
+            }};
+            document.body.appendChild(btn);
+        }}
+        
+        // 页面加载后尝试播放
+        window.addEventListener('load', function() {{
+            setTimeout(playMusic, 500);
+        }});
+        
+        // 用户交互时也尝试播放
+        document.addEventListener('click', function() {{
+            playMusic();
+        }});
+    </script>
+    """
+    st.markdown(audio_html, unsafe_allow_html=True)
 
 def show_blessings_one_by_one():
     """一个个显示祝福"""
@@ -225,7 +222,7 @@ def show_blessings_one_by_one():
     if 'blessings_shown' not in st.session_state:
         st.session_state.blessings_shown = []
     
-    total_blessings = 80
+    total_blessings = 50
     
     progress_bar = st.progress(0)
     status_text = st.empty()
@@ -234,17 +231,13 @@ def show_blessings_one_by_one():
     for i in range(total_blessings):
         progress = (i + 1) / total_blessings
         progress_bar.progress(progress)
-        status_text.text(f'✨ 正在发送祝福... {i+1}/{total_blessings}')
+        status_text.text(f'✨ 发送祝福 {i+1}/{total_blessings}')
         
         text = random.choice(wordslist)
         color = random.choice(colors)
         left = random.randint(1, 95)
         top = random.randint(3, 90)
-        font_size = random.randint(18, 26)
-        padding_h = random.randint(12, 20)
-        padding_v = random.randint(10, 16)
-        rotation = random.randint(-8, 8)
-        animation_delay = random.uniform(0, 0.3)
+        font_size = random.randint(18, 24)
         
         new_blessing = f'''
         <div class="blessing" style="
@@ -253,48 +246,39 @@ def show_blessings_one_by_one():
             background-color: {color};
             color: #333;
             font-size: {font_size}px;
-            padding: {padding_v}px {padding_h}px;
-            transform: rotate({rotation}deg);
-            animation-delay: {animation_delay}s;
         ">{text}</div>
         '''
         st.session_state.blessings_shown.append(new_blessing)
         blessings_container.markdown(''.join(st.session_state.blessings_shown), unsafe_allow_html=True)
-        time.sleep(0.15)
+        time.sleep(0.1)
     
-    status_text.success('🎊 所有祝福发送完成！满屏都是对你的祝福！')
+    status_text.success('🎊 祝福发送完成！')
     
-    st.markdown("---")
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button('🎉 再来一次！', type='primary', use_container_width=True):
-            for key in ['blessing_count', 'blessings_shown']:
-                if key in st.session_state:
-                    del st.session_state[key]
-            st.rerun()
+    if st.button('🔄 再来一次'):
+        for key in ['blessing_count', 'blessings_shown']:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.rerun()
 
 def main():
-    # 添加音乐播放器
-    add_music_player()
+    # 立即开始播放音乐
+    play_background_music()
     
-    # 使用新的标题样式
+    # 标题
     st.markdown("""
     <div class="title-container">
         <div class="title-text">moonbird的祝福</div>
-        <div class="subtitle">点击下方按钮，接收满满的惊喜祝福！</div>
+        <div class="subtitle">音乐自动播放中... 🎵</div>
     </div>
     """, unsafe_allow_html=True)
     
-    # 音乐使用说明
-    st.info("🎵 **音乐提示**: 右下角有音乐播放器，请点击播放按钮开启背景音乐")
+    # 音乐状态提示
+    st.info("💡 如果音乐没有自动播放，请点击页面任意位置或刷新页面")
     
     if 'blessing_count' not in st.session_state or st.session_state.blessing_count == 0:
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        col1, col2, col3 = st.columns([1, 3, 1])
-        with col2:
-            if st.button('🎁 开启祝福礼包 ✨', type='primary', use_container_width=True):
-                st.session_state.blessing_count = 1
-                st.rerun()
+        if st.button('🎁 开始祝福', type='primary', use_container_width=True):
+            st.session_state.blessing_count = 1
+            st.rerun()
     
     if 'blessing_count' in st.session_state and st.session_state.blessing_count > 0:
         show_blessings_one_by_one()
