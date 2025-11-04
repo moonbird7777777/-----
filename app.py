@@ -125,6 +125,35 @@ body {
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     margin-top: 10px;
 }
+
+/* 开始按钮样式 */
+.start-button {
+    background: linear-gradient(45deg, #FF6B6B, #FFD93D, #6BCF7F, #4D96FF);
+    background-size: 300% 300%;
+    animation: gradientFlow 3s ease infinite;
+    color: white;
+    border: none;
+    padding: 20px 40px;
+    border-radius: 30px;
+    font-size: 1.5em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.start-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.4);
+}
+
+/* 进度条样式 */
+.stProgress > div > div > div > div {
+    background: linear-gradient(90deg, #FF6B6B, #FFD93D, #6BCF7F, #4D96FF, #9D4BFF);
+    background-size: 300% 300%;
+    animation: gradientFlow 2s ease infinite;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -148,66 +177,6 @@ colors = [
     '#FF1744', '#FFC107', '#00C853', '#0091EA', '#D500F9',
     '#F44336', '#FFEB3B', '#4CAF50', '#03A9F4', '#9C27B0'
 ]
-
-def add_background_music():
-    """添加背景音乐"""
-    # 使用最简单的音频标签
-    music_html = """
-    <audio id="backgroundMusic" loop style="display: none;">
-        <source src="blessing_music.mp3" type="audio/mp3">
-    </audio>
-    <script>
-    // 创建音乐播放函数
-    function playBackgroundMusic() {
-        const audio = document.getElementById('backgroundMusic');
-        if (audio) {
-            audio.volume = 0.3; // 30%音量
-            // 尝试播放
-            audio.play().then(() => {
-                console.log('音乐开始播放');
-            }).catch(error => {
-                console.log('播放失败:', error);
-                // 如果失败，显示提示
-                showMusicTip();
-            });
-        }
-    }
-    
-    function showMusicTip() {
-        // 在页面底部显示提示
-        const tip = document.createElement('div');
-        tip.innerHTML = '🎵 点击此处开启音乐';
-        tip.style.cssText = `
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(255,255,255,0.9);
-            padding: 10px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-            z-index: 10000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        `;
-        tip.onclick = function() {
-            playBackgroundMusic();
-            tip.remove();
-        };
-        document.body.appendChild(tip);
-    }
-    
-    // 页面加载后尝试播放
-    window.addEventListener('load', function() {
-        setTimeout(playBackgroundMusic, 1000);
-    });
-    
-    // 用户与页面交互时也尝试播放
-    document.addEventListener('click', function() {
-        playBackgroundMusic();
-    });
-    </script>
-    """
-    st.markdown(music_html, unsafe_allow_html=True)
 
 def show_blessings_one_by_one():
     """一个个显示祝福"""
@@ -267,20 +236,17 @@ def show_blessings_one_by_one():
             st.rerun()
 
 def main():
-    # 添加背景音乐
-    add_background_music()
-    
     # 使用新的标题样式
     st.markdown("""
     <div class="title-container">
         <div class="title-text">moonbird的祝福</div>
-        <div class="subtitle">点击按钮，接收满满的惊喜祝福！</div>
+        <div class="subtitle">点击下方按钮，接收满满的惊喜祝福！</div>
     </div>
     """, unsafe_allow_html=True)
     
     if 'blessing_count' not in st.session_state or st.session_state.blessing_count == 0:
-        st.markdown("<br>", unsafe_allow_html=True)
-        col1, col2, col3 = st.columns([1, 2, 1])
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns([1, 3, 1])
         with col2:
             if st.button('🎁 开启祝福礼包 ✨', type='primary', use_container_width=True):
                 st.session_state.blessing_count = 1
