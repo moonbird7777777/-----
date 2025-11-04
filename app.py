@@ -125,17 +125,6 @@ body {
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     margin-top: 10px;
 }
-
-/* 隐藏的音乐播放器 */
-.hidden-audio {
-    position: fixed;
-    top: -100px;
-    left: -100px;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    pointer-events: none;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -159,6 +148,66 @@ colors = [
     '#FF1744', '#FFC107', '#00C853', '#0091EA', '#D500F9',
     '#F44336', '#FFEB3B', '#4CAF50', '#03A9F4', '#9C27B0'
 ]
+
+def add_background_music():
+    """添加背景音乐"""
+    # 使用最简单的音频标签
+    music_html = """
+    <audio id="backgroundMusic" loop style="display: none;">
+        <source src="blessing_music.mp3" type="audio/mp3">
+    </audio>
+    <script>
+    // 创建音乐播放函数
+    function playBackgroundMusic() {
+        const audio = document.getElementById('backgroundMusic');
+        if (audio) {
+            audio.volume = 0.3; // 30%音量
+            // 尝试播放
+            audio.play().then(() => {
+                console.log('音乐开始播放');
+            }).catch(error => {
+                console.log('播放失败:', error);
+                // 如果失败，显示提示
+                showMusicTip();
+            });
+        }
+    }
+    
+    function showMusicTip() {
+        // 在页面底部显示提示
+        const tip = document.createElement('div');
+        tip.innerHTML = '🎵 点击此处开启音乐';
+        tip.style.cssText = `
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 10000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        `;
+        tip.onclick = function() {
+            playBackgroundMusic();
+            tip.remove();
+        };
+        document.body.appendChild(tip);
+    }
+    
+    // 页面加载后尝试播放
+    window.addEventListener('load', function() {
+        setTimeout(playBackgroundMusic, 1000);
+    });
+    
+    // 用户与页面交互时也尝试播放
+    document.addEventListener('click', function() {
+        playBackgroundMusic();
+    });
+    </script>
+    """
+    st.markdown(music_html, unsafe_allow_html=True)
 
 def show_blessings_one_by_one():
     """一个个显示祝福"""
@@ -218,6 +267,9 @@ def show_blessings_one_by_one():
             st.rerun()
 
 def main():
+    # 添加背景音乐
+    add_background_music()
+    
     # 使用新的标题样式
     st.markdown("""
     <div class="title-container">
@@ -226,34 +278,13 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
-    # 在用户交互后添加音乐播放
-    if st.button('🎁 开启祝福礼包 ✨', type='primary', key='start_button'):
-        st.session_state.blessing_count = 1
-        
-        # 在用户点击后添加音乐（这样可以绕过自动播放限制）
-        music_html = """
-        <div class="hidden-audio">
-            <audio id="bgMusic" autoplay loop>
-                <source src="blessing_music.mp3" type="audio/mp3">
-            </audio>
-        </div>
-        <script>
-        // 用户点击后播放音乐
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                var audio = document.getElementById('bgMusic');
-                if (audio) {
-                    audio.volume = 0.5;
-                    audio.play().catch(function(e) {
-                        console.log('播放失败:', e);
-                    });
-                }
-            }, 500);
-        });
-        </script>
-        """
-        st.markdown(music_html, unsafe_allow_html=True)
-        st.rerun()
+    if 'blessing_count' not in st.session_state or st.session_state.blessing_count == 0:
+        st.markdown("<br>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button('🎁 开启祝福礼包 ✨', type='primary', use_container_width=True):
+                st.session_state.blessing_count = 1
+                st.rerun()
     
     if 'blessing_count' in st.session_state and st.session_state.blessing_count > 0:
         show_blessings_one_by_one()
