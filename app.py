@@ -154,6 +154,17 @@ body {
     background-size: 300% 300%;
     animation: gradientFlow 2s ease infinite;
 }
+
+/* 隐藏的音效播放器 */
+.sound-player {
+    position: fixed;
+    top: -100px;
+    left: -100px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -178,6 +189,89 @@ colors = [
     '#F44336', '#FFEB3B', '#4CAF50', '#03A9F4', '#9C27B0'
 ]
 
+def add_sound_effects():
+    """添加音效系统"""
+    sound_html = """
+    <div class="sound-player">
+        <!-- 开始音效 -->
+        <audio id="startSound" preload="auto">
+            <source src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" type="audio/mp3">
+        </audio>
+        <!-- 弹出音效1 -->
+        <audio id="popSound1" preload="auto">
+            <source src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3" type="audio/mp3">
+        </audio>
+        <!-- 弹出音效2 -->
+        <audio id="popSound2" preload="auto">
+            <source src="https://assets.mixkit.co/sfx/preview/mixkit-bubble-pop-up-alert-notification-2357.mp3" type="audio/mp3">
+        </audio>
+        <!-- 完成音效 -->
+        <audio id="completeSound" preload="auto">
+            <source src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" type="audio/mp3">
+        </audio>
+    </div>
+    
+    <script>
+    // 音效播放函数
+    function playSound(soundId) {
+        try {
+            const sound = document.getElementById(soundId);
+            if (sound) {
+                sound.volume = 0.3;
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log('音效播放失败:', e));
+            }
+        } catch (e) {
+            console.log('音效错误:', e);
+        }
+    }
+    
+    // 播放随机弹出音效
+    function playRandomPopSound() {
+        const sounds = ['popSound1', 'popSound2'];
+        const randomSound = sounds[Math.floor(Math.random() * sounds.length)];
+        playSound(randomSound);
+    }
+    
+    // 页面加载后预加载音效
+    window.addEventListener('load', function() {
+        // 预加载所有音效
+        const sounds = ['startSound', 'popSound1', 'popSound2', 'completeSound'];
+        sounds.forEach(soundId => {
+            const sound = document.getElementById(soundId);
+            if (sound) {
+                sound.load();
+            }
+        });
+    });
+    
+    // 监听祝福弹出事件（通过自定义事件）
+    document.addEventListener('blessingPop', function() {
+        playRandomPopSound();
+    });
+    
+    // 监听开始事件
+    document.addEventListener('blessingStart', function() {
+        playSound('startSound');
+    });
+    
+    // 监听完成事件
+    document.addEventListener('blessingComplete', function() {
+        playSound('completeSound');
+    });
+    </script>
+    """
+    st.markdown(sound_html, unsafe_allow_html=True)
+
+def trigger_sound_event(event_name):
+    """触发音效事件"""
+    js_code = f"""
+    <script>
+    document.dispatchEvent(new CustomEvent('{event_name}'));
+    </script>
+    """
+    st.markdown(js_code, unsafe_allow_html=True)
+
 def show_blessings_one_by_one():
     """一个个显示祝福"""
     placeholder = st.empty()
@@ -192,6 +286,9 @@ def show_blessings_one_by_one():
     progress_bar = st.progress(0)
     status_text = st.empty()
     blessings_container = st.empty()
+    
+    # 播放开始音效
+    trigger_sound_event('blessingStart')
     
     for i in range(total_blessings):
         progress = (i + 1) / total_blessings
@@ -222,8 +319,15 @@ def show_blessings_one_by_one():
         '''
         st.session_state.blessings_shown.append(new_blessing)
         blessings_container.markdown(''.join(st.session_state.blessings_shown), unsafe_allow_html=True)
+        
+        # 每5个祝福播放一次音效，避免太密集
+        if i % 5 == 0:
+            trigger_sound_event('blessingPop')
+        
         time.sleep(0.15)
     
+    # 播放完成音效
+    trigger_sound_event('blessingComplete')
     status_text.success('🎊 所有祝福发送完成！满屏都是对你的祝福！')
     
     st.markdown("---")
@@ -236,6 +340,9 @@ def show_blessings_one_by_one():
             st.rerun()
 
 def main():
+    # 添加音效系统
+    add_sound_effects()
+    
     # 使用新的标题样式
     st.markdown("""
     <div class="title-container">
