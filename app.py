@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 import time
+import base64
 
 # 设置页面配置
 st.set_page_config(
@@ -155,15 +156,15 @@ body {
     animation: gradientFlow 2s ease infinite;
 }
 
-/* 隐藏的音效播放器 */
-.sound-player {
-    position: fixed;
-    top: -100px;
-    left: -100px;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    pointer-events: none;
+/* 音效提示 */
+.sound-tip {
+    background: rgba(255,255,255,0.9);
+    padding: 10px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    text-align: center;
+    margin: 10px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -189,88 +190,14 @@ colors = [
     '#F44336', '#FFEB3B', '#4CAF50', '#03A9F4', '#9C27B0'
 ]
 
-def add_sound_effects():
-    """添加音效系统"""
-    sound_html = """
-    <div class="sound-player">
-        <!-- 开始音效 -->
-        <audio id="startSound" preload="auto">
-            <source src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" type="audio/mp3">
-        </audio>
-        <!-- 弹出音效1 -->
-        <audio id="popSound1" preload="auto">
-            <source src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3" type="audio/mp3">
-        </audio>
-        <!-- 弹出音效2 -->
-        <audio id="popSound2" preload="auto">
-            <source src="https://assets.mixkit.co/sfx/preview/mixkit-bubble-pop-up-alert-notification-2357.mp3" type="audio/mp3">
-        </audio>
-        <!-- 完成音效 -->
-        <audio id="completeSound" preload="auto">
-            <source src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" type="audio/mp3">
-        </audio>
-    </div>
+def play_simple_sound():
+    """使用Streamlit的audio组件播放简单音效"""
+    # 创建一个简单的提示音（使用base64编码的短音频）
+    # 这里使用一个非常简短的beep声
+    audio_base64 = "SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAABAAACcQCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAABQTEFNRTMuMTAwBKkAAAAAAAAAADUgJAOHQQAB9AAACHDURWIvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//sQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV"
     
-    <script>
-    // 音效播放函数
-    function playSound(soundId) {
-        try {
-            const sound = document.getElementById(soundId);
-            if (sound) {
-                sound.volume = 0.3;
-                sound.currentTime = 0;
-                sound.play().catch(e => console.log('音效播放失败:', e));
-            }
-        } catch (e) {
-            console.log('音效错误:', e);
-        }
-    }
-    
-    // 播放随机弹出音效
-    function playRandomPopSound() {
-        const sounds = ['popSound1', 'popSound2'];
-        const randomSound = sounds[Math.floor(Math.random() * sounds.length)];
-        playSound(randomSound);
-    }
-    
-    // 页面加载后预加载音效
-    window.addEventListener('load', function() {
-        // 预加载所有音效
-        const sounds = ['startSound', 'popSound1', 'popSound2', 'completeSound'];
-        sounds.forEach(soundId => {
-            const sound = document.getElementById(soundId);
-            if (sound) {
-                sound.load();
-            }
-        });
-    });
-    
-    // 监听祝福弹出事件（通过自定义事件）
-    document.addEventListener('blessingPop', function() {
-        playRandomPopSound();
-    });
-    
-    // 监听开始事件
-    document.addEventListener('blessingStart', function() {
-        playSound('startSound');
-    });
-    
-    // 监听完成事件
-    document.addEventListener('blessingComplete', function() {
-        playSound('completeSound');
-    });
-    </script>
-    """
-    st.markdown(sound_html, unsafe_allow_html=True)
-
-def trigger_sound_event(event_name):
-    """触发音效事件"""
-    js_code = f"""
-    <script>
-    document.dispatchEvent(new CustomEvent('{event_name}'));
-    </script>
-    """
-    st.markdown(js_code, unsafe_allow_html=True)
+    # 隐藏的音频播放
+    st.audio(audio_base64, format="audio/wav", start_time=0, autoplay=True)
 
 def show_blessings_one_by_one():
     """一个个显示祝福"""
@@ -287,8 +214,10 @@ def show_blessings_one_by_one():
     status_text = st.empty()
     blessings_container = st.empty()
     
-    # 播放开始音效
-    trigger_sound_event('blessingStart')
+    # 显示音效提示
+    with st.empty():
+        st.markdown('<div class="sound-tip">🎵 音效播放中...</div>', unsafe_allow_html=True)
+        time.sleep(2)
     
     for i in range(total_blessings):
         progress = (i + 1) / total_blessings
@@ -320,14 +249,21 @@ def show_blessings_one_by_one():
         st.session_state.blessings_shown.append(new_blessing)
         blessings_container.markdown(''.join(st.session_state.blessings_shown), unsafe_allow_html=True)
         
-        # 每5个祝福播放一次音效，避免太密集
-        if i % 5 == 0:
-            trigger_sound_event('blessingPop')
+        # 每10个祝福尝试播放一次音效
+        if i % 10 == 0:
+            try:
+                play_simple_sound()
+            except:
+                pass  # 如果音效失败，静默继续
         
         time.sleep(0.15)
     
     # 播放完成音效
-    trigger_sound_event('blessingComplete')
+    try:
+        play_simple_sound()
+    except:
+        pass
+    
     status_text.success('🎊 所有祝福发送完成！满屏都是对你的祝福！')
     
     st.markdown("---")
@@ -340,14 +276,18 @@ def show_blessings_one_by_one():
             st.rerun()
 
 def main():
-    # 添加音效系统
-    add_sound_effects()
-    
     # 使用新的标题样式
     st.markdown("""
     <div class="title-container">
         <div class="title-text">moonbird的祝福</div>
         <div class="subtitle">点击下方按钮，接收满满的惊喜祝福！</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 音效说明
+    st.markdown("""
+    <div class="sound-tip">
+        🎵 温馨提示：为确保最佳体验，请确保设备音量已开启
     </div>
     """, unsafe_allow_html=True)
     
